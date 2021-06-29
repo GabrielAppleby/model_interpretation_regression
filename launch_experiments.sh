@@ -13,7 +13,7 @@ else
 fi
 
 ## Learning rate for adam
-for transform in "SSCALE" "KBINS" "PTRAN" 
+for transform in "SSCALE" "KBINS" "PTRAN"
 do
     export transform=$transform
 
@@ -30,7 +30,7 @@ do
     if [[ $ACTION_NAME == 'submit' ]]; then
         ## Use this line to submit the experiment to the batch scheduler
         sbatch < do_experiment.slurm
-    
+
     elif [[ $ACTION_NAME == 'run_here' ]]; then
         ## Use this line to just run interactively
         bash do_experiment.slurm

@@ -25,7 +25,6 @@ def tune_all_classifiers(classifiers: List[Tuple], transforms: List[Tuple], trai
         for clf, clf_params, clf_name in classifiers:  # type: ClassifierMixin, Dict, str
             name = tran_name + '_' + clf_name
             pipeline: Pipeline = make_pipeline(tran, clf)
-            print({**tran_params, **clf_params}.keys())
             tune(pipeline, {**tran_params, **clf_params}, train_x, train_y, name)
 
     return results
@@ -36,7 +35,7 @@ def tune(pipeline: Pipeline, params: Dict, train_x: csr_matrix, train_y: np.arra
         pipeline,
         params,
         cv=3,
-        n_jobs=-1,
+        n_jobs=8,
         return_train_score=True,
         error_score='raise',
         refit=True,
@@ -67,6 +66,6 @@ def main(transform, regressor):
 
 
 if __name__ == '__main__':
-    # x_train, y_train = get_arrays('train')
-    # tune_all_classifiers(CLASSIFIERS.values(), TRANSFORMS.values(), x_train, y_train)
+    #x_train, y_train = get_arrays('train')
+    #tune_all_classifiers(CLASSIFIERS.values(), TRANSFORMS.values(), x_train, y_train)
     main()
