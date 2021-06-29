@@ -12,7 +12,7 @@ else
   ACTION_NAME=$1
 fi
 
-for transform in "SSCALE" "KBINS" "PTRAN"; do
+for transform in "NONE" "SSCALE" "KBINS" "PTRAN"; do
   export transform=$transform
 
   for reg in "KNN" "SVR" "XGB" "LIN"; do

@@ -9,13 +9,13 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.pipeline import make_pipeline
 
-from config import RESULTS_FOLDER
+from config import TUNING_RESULTS_FOLDER
 from data.data_loader import get_arrays
 from modeling.regressors import REGRESSORS
 from modeling.transforms import TRANSFORMS
 
 RANDOM_SEED = 42
-TUNING_RESULTS_FOLDER: Path = Path(RESULTS_FOLDER, 'tuning')
+
 
 
 def search(pipeline: Pipeline, params: Dict, x_train: np.ndarray, y_train: np.ndarray) -> Dict:
@@ -51,11 +51,12 @@ def main(transform: str, regressor: str) -> None:
     else:
         pipeline: Pipeline = make_pipeline(clf)
         params = clf_params
-        name = clf_name
+        name = "NONE" + '_' + clf_name
 
     results = search(pipeline, params, x_train, y_train)
+    results['name'] = name
     df = pd.DataFrame(results)
-    df.to_csv(Path(TUNING_RESULTS_FOLDER, '{}.csv'.format(name)))
+    df.to_csv(Path(TUNING_RESULTS_FOLDER, '{}.csv'.format(name)), index=False)
 
 
 if __name__ == '__main__':
