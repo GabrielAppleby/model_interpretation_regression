@@ -1,11 +1,13 @@
 from pathlib import Path
+from typing import Tuple
 
+import numpy as np
 import pandas as pd
 
-DATA_FOLDER: Path = Path(Path(__file__).parent, 'aact')
+from data.data_config import HAS_EXP_ACCESS, NUM_SAE, DATA_FOLDER
 
 SHORTENED_COLUMNS = {'number_of_arms': 'num_arms',
-                     'has_expanded_access': 'has_exp_access',
+                     HAS_EXP_ACCESS: 'has_exp_access',
                      'number_of_facilities': 'num_facil',
                      'actual_duration': 'actual_dur',
                      'months_to_report_results': 'months_to_report',
@@ -19,11 +21,11 @@ SHORTENED_COLUMNS = {'number_of_arms': 'num_arms',
                      'phase_Phase 2/Phase 3': 'p_2/3',
                      'phase_Phase 3': 'p_3',
                      'phase_Phase 4': 'p_4',
-                     'number_of_sae_subjects': 'sae_by_enroll_by_dur'
+                     NUM_SAE: 'sae_by_enroll'
                      }
 
 
-def get_dataframes(split: str):
+def get_dataframes(split: str) -> pd.DataFrame:
     x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split)))
     y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split)))
 
@@ -32,7 +34,7 @@ def get_dataframes(split: str):
     return df
 
 
-def get_arrays(split: str):
+def get_arrays(split: str) -> Tuple[np.ndarray, np.ndarray]:
     x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split)))
     y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split)))
-    return x.values, y.values.ravel()
+    return x.values[0:50], y.values[0:50].ravel()

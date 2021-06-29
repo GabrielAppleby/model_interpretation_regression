@@ -6,20 +6,16 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2._psycopg import connection, cursor
 
-load_dotenv()
+from data.data_config import DATA_FOLDER, FULL_CSV_FILE_NAME, NCT_ID, NUM_SAE
 
-DATA_FOLDER: Path = Path(Path(__file__).parent, 'aact')
+load_dotenv()
 
 DB_NAME = os.environ.get('DB_NAME')
 DB_USER = os.environ.get('DB_USER')
 HOST = os.environ.get('HOST')
 PASSWORD = os.environ.get('PASSWORD')
 
-OUTPUT_FILE_NAME = 'aact_aes_data.csv'
-
 SCHEMA = 'ctgov'
-NCT_ID = 'nct_id'
-NUM_SAE = 'number_of_sae_subjects'
 MAIN_TABLE = 'studies'
 SCHEMA_MAIN_TABLE = '{}.{}'.format(SCHEMA, MAIN_TABLE)
 
@@ -95,7 +91,7 @@ def main():
 
     output_query = WRITE_OUTPUT_STATEMENT.format(query)
 
-    with open(Path(DATA_FOLDER, OUTPUT_FILE_NAME), 'w') as f:
+    with open(Path(DATA_FOLDER, FULL_CSV_FILE_NAME), 'w') as f:
         cur.copy_expert(output_query, f)
 
     cur.close()
