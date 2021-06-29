@@ -34,15 +34,16 @@ def search(pipeline: Pipeline, params: Dict, x_train: np.ndarray, y_train: np.nd
 
 
 @click.command()
-@click.argument('transform', type=click.Choice(list(TRANSFORMS.keys()) + ['None']))
+@click.argument('transform', type=click.Choice(list(TRANSFORMS.keys()) + ['NONE']))
 @click.argument('regressor', type=click.Choice(list(REGRESSORS.keys())))
 def main(transform: str, regressor: str) -> None:
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
+    TUNING_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
     x_train, y_train = get_arrays('train')
     clf, clf_params, clf_name = REGRESSORS[regressor]
 
-    if transform != 'None':
+    if transform != 'NONE':
         tran, tran_params, tran_name = TRANSFORMS[transform]
         name = tran_name + '_' + clf_name
         pipeline: Pipeline = make_pipeline(tran, clf)

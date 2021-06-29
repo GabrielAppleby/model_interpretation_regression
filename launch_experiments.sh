@@ -35,7 +35,7 @@ for transform in "SSCALE" "KBINS" "PTRAN"; do
   done
 done
 
-export transform="None"
+export transform="NONE"
 for reg in "MEAN" "MEDIAN"; do
   export reg=$reg
 

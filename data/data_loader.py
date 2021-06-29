@@ -37,4 +37,4 @@ def get_dataframes(split: str) -> pd.DataFrame:
 def get_arrays(split: str) -> Tuple[np.ndarray, np.ndarray]:
     x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split)))
     y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split)))
-    return x.values[0:50], y.values[0:50].ravel()
+    return x.values, y.values.ravel()
