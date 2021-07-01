@@ -8,8 +8,10 @@ POWER_TRAN_NAME = "PTRAN"
 
 STANDARD_SCALER_PARAMS: Dict = {}
 
-KBINS_DISCRETIZER_PARAMS: Dict = {"kbinsdiscretizer__n_bins": [2, 5, 10, 15],
-                                  "kbinsdiscretizer__strategy": ["quantile", "uniform", "kmeans"]}
+KBINS_DISCRETIZER_PARAMS: Dict = {"columntransformer__kbinsdiscretizer__n_bins": [2, 5, 10, 15],
+                                  "columntransformer__kbinsdiscretizer__strategy": ["quantile",
+                                                                                    "uniform",
+                                                                                    "kmeans"]}
 
 POWER_TRANSFORMER_PARAMS: Dict = {}
 
