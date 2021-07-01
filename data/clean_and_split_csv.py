@@ -9,6 +9,12 @@ from data.data_config import FULL_CSV_FILE_NAME, MIN_AGE_UNIT, HAS_EXP_ACCESS, \
     NUM_SAE, NCT_ID, DATA_FOLDER
 
 RANDOM_SEED = 42
+CONDITION_MESH = 'condition_mesh_term'
+INTERVENTION_MESH = 'intervention_mesh_term'
+PHASE = 'phase'
+
+MESH_FIELDS = [CONDITION_MESH, INTERVENTION_MESH]
+CATEGORICAL_FIELDS = MESH_FIELDS + [PHASE]
 
 
 def drop_studies_where_age_not_measured_in_years(df: pd.DataFrame) -> pd.DataFrame:
@@ -22,9 +28,16 @@ def drop_studies_with_no_duration_or_enrollment(df: pd.DataFrame) -> pd.DataFram
     return df
 
 
+def rename_mesh_columns(df: pd.DataFrame) -> pd.DataFrame:
+    to_rename = {'mesh_term': CONDITION_MESH, 'mesh_term.1': INTERVENTION_MESH}
+    df = df.rename(columns=lambda c: to_rename[c] if c in to_rename.keys() else c)
+    return df
+
+
 def transform_expanded_access_to_binary(df: pd.DataFrame) -> pd.DataFrame:
     df.loc[df[HAS_EXP_ACCESS] == 'f', HAS_EXP_ACCESS] = 0
     df.loc[df[HAS_EXP_ACCESS] == 't', HAS_EXP_ACCESS] = 1
+    df[HAS_EXP_ACCESS].astype(int)
     return df
 
 
@@ -33,28 +46,46 @@ def divide_total_saes_by_enrollment(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def ensure_no_duplicate_studies(df: pd.DataFrame) -> None:
-    assert (df.shape[0] == len(df[NCT_ID].unique()))
+def drop_less_popular_categorical_values(df: pd.DataFrame, column) -> pd.DataFrame:
+    series = df[column]
+    df = df[series.isin(series.value_counts()[:50].index)]
+    return df
+
+
+def transform_tall_to_wide(df: pd.DataFrame) -> pd.DataFrame:
+    dummy_fields = pd.concat(
+        [df[[NCT_ID]],
+         pd.get_dummies(df.drop(columns=df.columns.difference(CATEGORICAL_FIELDS)),
+                        columns=CATEGORICAL_FIELDS)], axis=1).groupby(NCT_ID).max().reset_index()
+    df = df.drop(columns=CATEGORICAL_FIELDS).drop_duplicates()
+    df = pd.merge(dummy_fields, df, on='nct_id', how='inner')
+    return df
 
 
 def main():
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
+    pd.options.display.max_columns = 999
 
     df = pd.read_csv(FULL_CSV_FILE_NAME)
+    # There is something deeeply wrong with the count field
+    df = df.drop(columns='count')
     df = drop_studies_where_age_not_measured_in_years(df)
     df = drop_studies_with_no_duration_or_enrollment(df)
+    df = rename_mesh_columns(df)
+    for cat_field in MESH_FIELDS:
+        df = drop_less_popular_categorical_values(df, cat_field)
     df = df.drop_duplicates()
     df = df.dropna()
+    unique = len(df[NCT_ID].unique())
+    df = transform_expanded_access_to_binary(df)
+    df = transform_tall_to_wide(df)
 
-    ensure_no_duplicate_studies(df)
+    assert (df.shape[0] == unique)
 
     df = divide_total_saes_by_enrollment(df)
-
     y = df[NUM_SAE]
     x = df.drop(columns=[NUM_SAE, NCT_ID, MIN_AGE_UNIT])
-    x = transform_expanded_access_to_binary(x)
-    x = pd.get_dummies(x, columns=['phase'])
 
     splits = train_test_split(x, y, test_size=.25)
     named_splits = zip(('x_train', 'x_test', 'y_train', 'y_test'), splits)

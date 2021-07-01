@@ -6,37 +6,21 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from config import RESULTS_FOLDER
-from data.data_loader import get_dataframes
+from config import RESULTS_FOLDER, get_dummy_columns
+from data.data_loader import get_shortened_dataframe
 
 EXPLORATION_RESULTS_FOLDER: Path = Path(RESULTS_FOLDER, 'exploration')
-CATEGORICAL_COLUMNS = ['has_exp_access',
-                       'p_early_1',
-                       'p_1',
-                       'p_1/2',
-                       'p_2',
-                       'p_2/3',
-                       'p_3',
-                       'p_4']
 
 
-def create_hists(df: pd.DataFrame, bin_sizes: List[int]) -> None:
-    for bin_size in bin_sizes:
-        df.hist(bins=bin_size)
-        plt.savefig(Path(EXPLORATION_RESULTS_FOLDER, 'hist_{}.png'.format(bin_size)),
-                    bbox_inches='tight', format='png')
-        plt.clf()
-
-
-def create_pairplot(df: pd.DataFrame) -> None:
-    to_plot = df.drop(columns=CATEGORICAL_COLUMNS)
+def create_pairplot(df: pd.DataFrame, dummy_columns: List[str]) -> None:
+    to_plot = df.drop(columns=dummy_columns)
     sns.pairplot(to_plot)
     plt.savefig(Path(EXPLORATION_RESULTS_FOLDER, 'pairplot.png'), bbox_inches='tight', format='png')
     plt.clf()
 
 
-def create_corr_matrix(df: pd.DataFrame) -> None:
-    to_plot = df.drop(columns=CATEGORICAL_COLUMNS)
+def create_corr_matrix(df: pd.DataFrame, dummy_columns: List[str]) -> None:
+    to_plot = df.drop(columns=dummy_columns)
     corr = to_plot.corr()
     mask = np.zeros_like(corr, dtype=bool)
     mask[np.triu_indices_from(corr, k=1)] = True
@@ -49,10 +33,10 @@ def create_corr_matrix(df: pd.DataFrame) -> None:
 def main():
     EXPLORATION_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
     plt.rcParams["figure.autolayout"] = True
-    train = get_dataframes('train')
-    create_hists(train, [5, 10, 15])
-    create_pairplot(train)
-    create_corr_matrix(train)
+    train = get_shortened_dataframe('train')
+    dummy_columns = get_dummy_columns(train)
+    create_pairplot(train, dummy_columns)
+    create_corr_matrix(train, dummy_columns)
 
 
 if __name__ == '__main__':

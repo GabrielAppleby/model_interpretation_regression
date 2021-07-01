@@ -34,7 +34,8 @@ TABLES_AND_FIELDS: Dict[str, List[str]] = {MAIN_TABLE:
                                                 'minimum_age_unit',
                                                 'number_of_primary_outcomes_to_measure',
                                                 'number_of_secondary_outcomes_to_measure'],
-                                           'interventions': []}
+                                           'browse_interventions': ['mesh_term'],
+                                           'browse_conditions': ['mesh_term']}
 
 RESTRAINTS = ['overall_status = \'Completed\'',
               'study_type = \'Interventional\'',

@@ -15,4 +15,3 @@ source activate model_interp
 
 # Pass along all ENV variables as arguments to my Python script
 python model_search.py $transform $reg
-

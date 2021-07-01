@@ -5,20 +5,20 @@ from typing import Dict
 import click
 import numpy as np
 import pandas as pd
+from sklearn.compose import make_column_transformer
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.pipeline import make_pipeline
 
-from config import TUNING_RESULTS_FOLDER
-from data.data_loader import get_arrays
+from config import TUNING_RESULTS_FOLDER, get_dummy_columns
+from data.data_loader import get_dataframes
 from modeling.regressors import REGRESSORS
 from modeling.transforms import TRANSFORMS
 
 RANDOM_SEED = 42
 
 
-
-def search(pipeline: Pipeline, params: Dict, x_train: np.ndarray, y_train: np.ndarray) -> Dict:
+def search(pipeline: Pipeline, params: Dict, x_train: pd.DataFrame, y_train: pd.DataFrame) -> Dict:
     gs_clf: GridSearchCV = GridSearchCV(
         pipeline,
         params,
@@ -40,13 +40,16 @@ def main(transform: str, regressor: str) -> None:
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
     TUNING_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
-    x_train, y_train = get_arrays('train')
+    x_train, y_train = get_dataframes('train')
     clf, clf_params, clf_name = REGRESSORS[regressor]
 
     if transform != 'NONE':
         tran, tran_params, tran_name = TRANSFORMS[transform]
+        dummy_columns = get_dummy_columns(x_train)
+        cols_to_transform = x_train.columns.difference(dummy_columns)
         name = tran_name + '_' + clf_name
-        pipeline: Pipeline = make_pipeline(tran, clf)
+        pipeline: Pipeline = make_pipeline(
+            make_column_transformer((tran, cols_to_transform), remainder='passthrough'), clf)
         params: Dict = {**tran_params, **clf_params}
     else:
         pipeline: Pipeline = make_pipeline(clf)
