@@ -9,7 +9,7 @@
 *.jpg
 *.png
 *.pdf
-
+*.joblib
 
 ### csvs ###
 *.csv

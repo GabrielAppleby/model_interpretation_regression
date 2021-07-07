@@ -19,14 +19,15 @@ SHORTENED_COLUMNS = {'number_of_arms': 'num_arms',
 
 
 def get_shortened_dataframe(split: str) -> pd.DataFrame:
-    x, y = get_dataframes(split)
+    x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split)))
+    y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split)))
 
     df = pd.concat((x, y), axis=1)
     df = df.rename(SHORTENED_COLUMNS, axis=1)
     return df
 
 
-def get_dataframes(split: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-    x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split)))
-    y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split)))
+def get_arrays(split: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split))).values
+    y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split))).values.ravel()
     return x, y

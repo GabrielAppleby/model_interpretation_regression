@@ -48,7 +48,7 @@ def divide_total_saes_by_enrollment(df: pd.DataFrame) -> pd.DataFrame:
 
 def drop_less_popular_categorical_values(df: pd.DataFrame, column) -> pd.DataFrame:
     series = df[column]
-    df = df[series.isin(series.value_counts()[:50].index)]
+    df = df[series.isin(series.value_counts()[:40].index)]
     return df
 
 
@@ -65,11 +65,8 @@ def transform_tall_to_wide(df: pd.DataFrame) -> pd.DataFrame:
 def main():
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
-    pd.options.display.max_columns = 999
 
     df = pd.read_csv(FULL_CSV_FILE_NAME)
-    # There is something deeeply wrong with the count field
-    df = df.drop(columns='count')
     df = drop_studies_where_age_not_measured_in_years(df)
     df = drop_studies_with_no_duration_or_enrollment(df)
     df = rename_mesh_columns(df)

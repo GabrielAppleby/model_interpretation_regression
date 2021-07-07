@@ -1,66 +1,57 @@
 import random
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
 
-import click
 import numpy as np
 import pandas as pd
-from sklearn.compose import make_column_transformer
+from joblib import dump
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.pipeline import make_pipeline
 
-from config import TUNING_RESULTS_FOLDER, get_dummy_columns
-from data.data_loader import get_dataframes
+from config import TUNING_RESULTS_FOLDER, SAVED_MODEL_FOLDER, SCORING
+from data.data_loader import get_arrays
 from modeling.regressors import REGRESSORS
-from modeling.transforms import TRANSFORMS
 
 RANDOM_SEED = 42
 
 
-def search(pipeline: Pipeline, params: Dict, x_train: pd.DataFrame, y_train: pd.DataFrame) -> Dict:
+def search(pipeline: Pipeline, params: Dict, x_train: pd.DataFrame, y_train: pd.DataFrame) -> Tuple[
+    Dict, Pipeline]:
     gs_clf: GridSearchCV = GridSearchCV(
         pipeline,
         params,
-        scoring=['neg_mean_absolute_error', 'neg_mean_squared_error', 'r2'],
+        scoring=SCORING,
         cv=3,
         n_jobs=8,
         return_train_score=True,
         error_score='raise',
-        refit=False,
+        refit='neg_mean_squared_error',
         verbose=0)
     gs_clf: GridSearchCV = gs_clf.fit(x_train, y_train)
-    return gs_clf.cv_results_
+    best_estimator: pipeline = gs_clf.best_estimator_
+    return gs_clf.cv_results_, best_estimator
 
 
-@click.command()
-@click.argument('transform', type=click.Choice(list(TRANSFORMS.keys()) + ['NONE']))
-@click.argument('regressor', type=click.Choice(list(REGRESSORS.keys())))
-def main(transform: str, regressor: str) -> None:
+# @click.command()
+# @click.argument('regressor', type=click.Choice(list(REGRESSORS.keys())))
+def main(regressor: str) -> None:
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
     TUNING_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
-    x_train, y_train = get_dataframes('train')
+    SAVED_MODEL_FOLDER.mkdir(parents=True, exist_ok=True)
+    x_train, y_train = get_arrays('train')
+
     clf, clf_params, clf_name = REGRESSORS[regressor]
+    pipeline: Pipeline = make_pipeline(clf)
 
-    if transform != 'NONE':
-        tran, tran_params, tran_name = TRANSFORMS[transform]
-        dummy_columns = get_dummy_columns(x_train)
-        cols_to_transform = x_train.columns.difference(dummy_columns)
-        name = tran_name + '_' + clf_name
-        pipeline: Pipeline = make_pipeline(
-            make_column_transformer((tran, cols_to_transform), remainder='passthrough'), clf)
-        params: Dict = {**tran_params, **clf_params}
-    else:
-        pipeline: Pipeline = make_pipeline(clf)
-        params = clf_params
-        name = "NONE" + '_' + clf_name
+    results, best_estimator = search(pipeline, clf_params, x_train, y_train)
 
-    results = search(pipeline, params, x_train, y_train)
-    results['name'] = name
+    dump(best_estimator, Path(SAVED_MODEL_FOLDER, '{}.joblib'.format(clf_name)))
+    results['name'] = clf_name
     df = pd.DataFrame(results)
-    df.to_csv(Path(TUNING_RESULTS_FOLDER, '{}.csv'.format(name)), index=False)
+    df.to_csv(Path(TUNING_RESULTS_FOLDER, '{}.csv'.format(clf_name)), index=False)
 
 
 if __name__ == '__main__':
-    main()
+    main('LIN')
