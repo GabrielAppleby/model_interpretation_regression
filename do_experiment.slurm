@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #SBATCH -p batch                  # Partition to submit to
-#SBATCH -t 1-00:00                # Runtime in D-HH:MM
+#SBATCH -t 0-01:00                # Runtime in D-HH:MM
 #SBATCH --nodes 1                 # Number of nodes
 #SBATCH --ntasks 1                # Number of tasks
 #SBATCH --cpus-per-task 8         # Number of cpus

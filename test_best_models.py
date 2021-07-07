@@ -1,7 +1,6 @@
 from pathlib import Path
 from typing import List
 
-import numpy as np
 import pandas as pd
 from joblib import load
 from sklearn.metrics import get_scorer
@@ -19,12 +18,12 @@ def main():
     models: List = [load(csv) for csv in saved_model_paths]
     results = []
     for model in models:
+        model_name = list(model.named_steps.keys())[0]
+        if model_name == 'dummyregressor':
+            model_name = str(model.named_steps[model_name])
         current_scores = {}
         preds = model.predict(x_test)
-        np.savez(Path(TEST_RESULTS_FOLDER, '{}.npz'.format(str(model))),
-                 preds=preds,
-                 actuals=y_test)
-        current_scores['name'] = str(model)
+        current_scores['name'] = model_name
         for score_type in SCORING:
             scorer = get_scorer(score_type)._score_func
             current_scores[score_type] = scorer(y_test, preds)
