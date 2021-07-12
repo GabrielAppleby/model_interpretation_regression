@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 
 from config import TEST_RESULTS_FOLDER, RAW_TEST_PREDS_FILENAME, get_columns_that_start_with, \
-    CONDITION_PREFIX, INTERVENTION_PREFIX
+    CONDITION_PREFIX, INTERVENTION_PREFIX, REGRESSOR_RENAMES
 from data.data_config import NUM_SAE
 
 
@@ -15,11 +15,6 @@ class HeatMapInfo(NamedTuple):
     k: int
     col_name: str
 
-
-REGRESSOR_RENAMES = {'xgbregressor': 'XGB',
-                     'kneighborsregressor': 'KNN',
-                     'linearregression': 'OLS',
-                     'svr': 'SVM'}
 
 PREFIXS_TO_VISUALIZE: List[HeatMapInfo] = [HeatMapInfo(CONDITION_PREFIX, 10, 'Condition'),
                                            HeatMapInfo(INTERVENTION_PREFIX, 10, 'Intervention')]
@@ -72,7 +67,7 @@ def mean_error_by_cat_val(df_single_category: pd.DataFrame, col_name: str,
         df_single_category[regressor] = squared_error(df_single_category[NUM_SAE],
                                                       df_single_category[regressor])
     grp = df_single_category.groupby(by=[col_name]).mean()
-    to_plot = grp.drop(columns=grp.columns.difference(REGRESSOR_RENAMES.values()))
+    to_plot = grp.drop(columns=grp.columns.difference(regressor_names))
     return to_plot
 
 

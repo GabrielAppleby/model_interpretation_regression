@@ -9,6 +9,7 @@
 *.jpg
 *.png
 *.pdf
+*.tex
 *.joblib
 
 ### csvs ###
