@@ -6,8 +6,8 @@ import pandas as pd
 from joblib import load
 from sklearn.metrics import get_scorer
 
-from config import SAVED_MODEL_FOLDER, SCORING, TEST_RESULTS_FOLDER
-from data.data_loader import get_arrays, get_dataframes
+from config import SAVED_MODEL_FOLDER, SCORING, TEST_RESULTS_FOLDER, RAW_TEST_PREDS_FILENAME
+from data.data_loader import get_dataframes
 
 
 def main():
@@ -38,7 +38,7 @@ def main():
     raw_preds_array = np.concatenate(all_preds, axis=1)
     raw_preds_df = pd.DataFrame(raw_preds_array, columns=names)
     raw_preds_and_truth_df = pd.concat((raw_preds_df, y_test, x_test), axis=1)
-    raw_preds_and_truth_df.to_csv(Path(TEST_RESULTS_FOLDER, 'raw_preds_and_truth.csv'), index=False)
+    raw_preds_and_truth_df.to_csv(Path(TEST_RESULTS_FOLDER, RAW_TEST_PREDS_FILENAME), index=False)
     results_df = pd.DataFrame(results)
     results_df.to_csv(Path(TEST_RESULTS_FOLDER, 'final_results.csv'), index=False)
 
