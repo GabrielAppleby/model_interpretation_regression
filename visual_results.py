@@ -4,6 +4,11 @@ from typing import List, NamedTuple, Tuple, Iterable
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import numpy as np
+from matplotlib.patches import Ellipse
+import matplotlib.transforms as transforms
+from matplotlib.pyplot import figure
+from sklearn.metrics import r2_score
 
 from config import TEST_RESULTS_FOLDER, RAW_TEST_PREDS_FILENAME, get_columns_that_start_with, \
     CONDITION_PREFIX, INTERVENTION_PREFIX, REGRESSOR_RENAMES
@@ -90,6 +95,53 @@ def squared_error(true: pd.Series, pred: pd.Series) -> pd.Series:
     return (true - pred) ** 2
 
 
+def plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name: str, n_std=2.0, facecolor='none') -> None:
+    # Taken from https://matplotlib.org/devdocs/gallery/statistics/confidence_ellipse.html
+    x = predicted
+    y = actual
+    cov = np.cov(x, y)
+    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    # Using a special case to obtain the eigenvalues of this
+    # two-dimensionl dataset.
+    ell_radius_x = np.sqrt(1 + pearson)
+    ell_radius_y = np.sqrt(1 - pearson)
+    ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2, alpha=0.2)
+
+    print("for model_name {}, radius x is {}, radius y is {}".format(model_name, ell_radius_x, ell_radius_y))
+    print(" and the sklearn r2_score is ", r2_score(y, x))
+    # Calculating the stdandard deviation of x from
+    # the squareroot of the variance and multiplying
+    # with the given number of standard deviations.
+    scale_x = np.sqrt(cov[0, 0]) * n_std
+    mean_x = np.mean(x)
+
+    # calculating the stdandard deviation of y ...
+    scale_y = np.sqrt(cov[1, 1]) * n_std
+    mean_y = np.mean(y)
+
+    transf = transforms.Affine2D() \
+        .rotate_deg(45) \
+        .scale(scale_x, scale_y) \
+        .translate(mean_x, mean_y)
+
+    # ellipse.set_transform(transf)
+
+    figure(figsize=(6, 6), dpi=80)
+    ax = plt.gca()
+    ellipse.set_transform(transf + ax.transData)
+    ax.add_patch(ellipse)
+    ax.scatter(x, y, c='red', s=3)
+    ax.set_title("Correlation between predicted and actual, {}".format(model_name))
+
+    plt.xlabel('predicted')
+    plt.ylabel('actual')
+    plt.xlim((-1.0, 6.0))
+    plt.ylim((-1.0, 6.0))
+
+    plt.savefig(Path(TEST_RESULTS_FOLDER, 'scatter_{}.png'.format(model_name)),
+                bbox_inches='tight', format='png')
+    plt.clf()
+    
 def main():
     TEST_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
     plt.rcParams["figure.autolayout"] = True
@@ -106,6 +158,9 @@ def main():
         to_plot = mean_error_by_cat_val(df_single_category, col_name, REGRESSOR_RENAMES.values())
         plot_heatmap(to_plot, col_name)
 
-
+    for model_name in ['XGB', 'dummyregressor_mean', 'OLS', 'dummyregressor_median', 'SVM', 'KNN']:
+        # plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name
+        plot_ellipse(df[model_name], df.number_of_sae_subjects, model_name)
+        
 if __name__ == '__main__':
     main()
