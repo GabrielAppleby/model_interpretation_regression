@@ -141,7 +141,42 @@ def plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name: str, n_std
     plt.savefig(Path(TEST_RESULTS_FOLDER, 'scatter_{}.png'.format(model_name)),
                 bbox_inches='tight', format='png')
     plt.clf()
-    
+
+def plot_residuals(predicted: pd.Series, actual: pd.Series, model_name: str) -> None:
+    # Taken from https://matplotlib.org/devdocs/gallery/statistics/confidence_ellipse.html
+    x = predicted
+    y = actual
+    errors = np.abs(x - y)
+    mean_error = np.mean(errors)
+    sorted_errors = np.sort(errors)[::-1]
+    # rectangle = Rectangle((0, 0), width=6.0, height=mean_error, alpha=0.2)
+    rectangle = Rectangle((0, 0), width=1000.0, height=mean_error, alpha=0.2, color='green')
+
+    figure(figsize=(6, 6), dpi=80)
+    ax = plt.gca()
+    ax.add_patch(rectangle)
+    ax.bar(range(len(sorted_errors)), sorted_errors)
+    ax.annotate("Mean Absolute Error: {:0.3f}".format(mean_error), (600.0, 1.5))
+    # ellipse.set_transform(transf + ax.transData)
+    # ax.add_patch(ellipse)
+    # ax.scatter(x, y, c='red', s=3)
+    ax.set_title("Absolute error per site, {}".format(model_name))
+
+    plt.xlabel('sites sorted by error')
+    plt.ylabel('Absolute error')
+    plt.tick_params(
+        axis='x',          # changes apply to the x-axis
+        which='both',      # both major and minor ticks are affected
+        bottom=False,      # ticks along the bottom edge are off
+        top=False,         # ticks along the top edge are off
+        labelbottom=False)
+    # plt.xlim((-1.0, 6.0))
+    plt.ylim((0.0, 13.0))
+
+    plt.savefig(Path(TEST_RESULTS_FOLDER, 'residuals_{}.png'.format(model_name)),
+                bbox_inches='tight', format='png')
+    plt.clf()
+
 def main():
     TEST_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
     plt.rcParams["figure.autolayout"] = True
@@ -161,6 +196,7 @@ def main():
     for model_name in ['XGB', 'dummyregressor_mean', 'OLS', 'dummyregressor_median', 'SVM', 'KNN']:
         # plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name
         plot_ellipse(df[model_name], df.number_of_sae_subjects, model_name)
+        plot_residuals(df[model_name], df.number_of_sae_subjects, model_name)
         
 if __name__ == '__main__':
     main()
