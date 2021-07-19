@@ -2,7 +2,7 @@
 #
 # Usage
 # -----
-# $ bash launch_experiments.sh ACTION_NAME
+# $ bash launch_cluster_model_search.sh ACTION_NAME
 #
 # where ACTION_NAME is either 'list' or 'submit' or 'run_here'
 

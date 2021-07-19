@@ -24,6 +24,11 @@ REGRESSOR_RENAMES = {'xgbregressor': 'XGB',
                      'linearregression': 'OLS',
                      'svr': 'SVM'}
 
+TEST_COL_RENAMES = {'neg_mean_absolute_error': 'MAE',
+                    'neg_mean_squared_error': 'MSE',
+                    'r2': 'R^2',
+                    'name': 'Regressor'}
+
 DUMMY_REGRESSOR_RENAMES = {'dummyregressor_mean': 'Mean', 'dummyregressor_median': 'Median'}
 
 

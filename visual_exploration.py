@@ -45,7 +45,9 @@ def create_corr_matrix(df: pd.DataFrame, dummy_columns: List[str]) -> None:
     corr = to_plot.corr()
     mask = np.zeros_like(corr, dtype=bool)
     mask[np.triu_indices_from(corr, k=1)] = True
-    sns.heatmap(corr, mask=mask, cmap='inferno')
+    sns.heatmap(corr, mask=mask, cmap='inferno', cbar_kws={'label': 'Correlation'})
+    plt.xlabel('Column')
+    plt.ylabel('Column')
     plt.savefig(Path(EXPLORATION_RESULTS_FOLDER, 'correlation_matrix.png'), bbox_inches='tight',
                 format='png')
     plt.clf()

@@ -17,13 +17,13 @@ from modeling.regressors import REGRESSORS
 RANDOM_SEED = 42
 
 
-def search(pipeline: Pipeline, params: Dict, x_train: pd.DataFrame, y_train: pd.DataFrame) -> Tuple[
+def search(pipeline: Pipeline, params: Dict, x_train: np.ndarray, y_train: np.ndarray) -> Tuple[
     Dict, Pipeline]:
     gs_clf: GridSearchCV = GridSearchCV(
         pipeline,
         params,
         scoring=SCORING,
-        cv=3,
+        cv=5,
         n_jobs=8,
         return_train_score=True,
         error_score='raise',
