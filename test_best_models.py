@@ -1,4 +1,4 @@
-# import random
+import random
 from pathlib import Path
 from typing import List
 
@@ -12,12 +12,12 @@ from config import SAVED_MODEL_FOLDER, SCORING, TEST_RESULTS_FOLDER, RAW_TEST_PR
 from data.data_loader import get_dataframes
 
 
-# RANDOM_SEED = 42
+RANDOM_SEED = 42
 
 
 def main():
-    # random.seed(RANDOM_SEED)
-    # np.random.seed(RANDOM_SEED)
+    random.seed(RANDOM_SEED)
+    np.random.seed(RANDOM_SEED)
     x_test, y_test = get_dataframes('test')
     SAVED_MODEL_FOLDER.mkdir(exist_ok=True, parents=True)
     TEST_RESULTS_FOLDER.mkdir(exist_ok=True, parents=True)
