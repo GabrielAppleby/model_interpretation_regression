@@ -3,12 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 from config import TEST_RESULTS_FOLDER, TEST_RESULTS_FILENAME, REGRESSOR_RENAMES, \
-    DUMMY_REGRESSOR_RENAMES, TUNING_RESULTS_FOLDER
-
-TEST_COL_RENAMES = {'neg_mean_absolute_error': 'MAE',
-                    'neg_mean_squared_error': 'MSE',
-                    'r2': 'R^2',
-                    'name': 'Regressor'}
+    DUMMY_REGRESSOR_RENAMES, TUNING_RESULTS_FOLDER, TEST_COL_RENAMES
 
 TUNING_COL_RENAMES = {'mean_train_neg_mean_absolute_error': 'Train MAE',
                       'mean_train_neg_mean_squared_error': 'Train MSE',

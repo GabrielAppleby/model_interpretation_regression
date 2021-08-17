@@ -13,11 +13,11 @@ LIN_NAME = "LIN"
 MEAN_NAME = "MEAN"
 MEDIAN_NAME = "MEDIAN"
 
-KNN_PARAMS: Dict = {"kneighborsregressor__n_neighbors": [1, 5, 10, 15, 20, 25]}
+KNN_PARAMS: Dict = {"kneighborsregressor__n_neighbors": [1] + list(range(5, 80, 5))}
 
-SVR_PARAMS: Dict = {"svr__C": [.01, .5, 1, 1.5, 2, 2.5]}
+SVR_PARAMS: Dict = {"svr__C": [2 ** x for x in range(-7, 19)]}
 
-XGB_PARAMS: Dict = {"xgbregressor__max_depth": [3, 5, 7, 9]}
+XGB_PARAMS: Dict = {"xgbregressor__max_depth": list(range(1, 8, 1))}
 
 LINEAR_PARAMS: Dict = {}
 

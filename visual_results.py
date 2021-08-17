@@ -1,17 +1,19 @@
 from pathlib import Path
-from typing import List, NamedTuple, Tuple, Iterable
+from typing import List, NamedTuple, Tuple, Iterable, Dict
 
 import matplotlib.pyplot as plt
+import matplotlib.transforms as transforms
+import numpy as np
 import pandas as pd
 import seaborn as sns
-import numpy as np
-from matplotlib.patches import Ellipse
-import matplotlib.transforms as transforms
+from matplotlib.patches import Ellipse, Rectangle
 from matplotlib.pyplot import figure
+from sklearn.metrics import get_scorer
 from sklearn.metrics import r2_score
 
 from config import TEST_RESULTS_FOLDER, RAW_TEST_PREDS_FILENAME, get_columns_that_start_with, \
-    CONDITION_PREFIX, INTERVENTION_PREFIX, REGRESSOR_RENAMES
+    CONDITION_PREFIX, INTERVENTION_PREFIX, REGRESSOR_RENAMES, SCORING, TEST_COL_RENAMES, \
+    DUMMY_REGRESSOR_RENAMES
 from data.data_config import NUM_SAE
 
 
@@ -46,8 +48,8 @@ def get_top_k_cat_col_from_one_hot(df_single_category: pd.DataFrame,
     top_k_cat_vals = get_top_k_cat_values(df_prefix_cols_only, k)
     df_single_category[col_name] = get_cat_val_from_one_hot(df_prefix_cols_only)
     df_single_category = keep_top_k_categories(df_single_category, col_name, top_k_cat_vals)
-    df_single_category[col_name] = remove_prefix(df_single_category, prefix, col_name,
-                                                 top_k_cat_vals)
+    df_single_category[col_name] = remove_prefixes(df_single_category, prefix, col_name,
+                                                   top_k_cat_vals)
     return df_single_category
 
 
@@ -66,48 +68,83 @@ def load_test_results() -> pd.DataFrame:
     return pd.read_csv(Path(TEST_RESULTS_FOLDER, RAW_TEST_PREDS_FILENAME))
 
 
-def mean_error_by_cat_val(df_single_category: pd.DataFrame, col_name: str,
-                          regressor_names: Iterable[str]):
-    for regressor in regressor_names:
-        df_single_category[regressor] = squared_error(df_single_category[NUM_SAE],
-                                                      df_single_category[regressor])
-    grp = df_single_category.groupby(by=[col_name]).mean()
-    to_plot = grp.drop(columns=grp.columns.difference(regressor_names))
-    return to_plot
+def mean_error_by_cat_val(df_single_category: pd.DataFrame,
+                          cat_col_name: str,
+                          regressor_names: Iterable[str],
+                          scorer_names: Iterable[str]) -> Dict[str, pd.DataFrame]:
+    to_plots = {}
+    for regressor_name in regressor_names:
+        score_series = []
+        for scorer_name in scorer_names:
+            scorer = get_scorer(scorer_name)._score_func
+            col_name = '{}'.format(TEST_COL_RENAMES[scorer_name])
+            score = df_single_category.groupby(by=[cat_col_name]).apply(
+                lambda x: scorer(x[NUM_SAE], x[regressor_name])).rename(col_name)
+            score_series.append(score)
+        to_plots[regressor_name] = pd.concat(score_series, axis=1)
+    return to_plots
 
 
-def plot_heatmap(to_plot: pd.DataFrame, col_name: str) -> None:
-    sns.heatmap(to_plot, cmap=sns.cm.rocket_r, cbar_kws={'label': 'Mean Squared Error'})
-    plt.xlabel('Regressor')
-    plt.savefig(Path(TEST_RESULTS_FOLDER, 'heatmap_{}.png'.format(col_name)),
+def plot_heatmap(to_plot: pd.DataFrame, col_name: str, regressor_name: str) -> None:
+    sns.heatmap(to_plot, cmap='RdBu_r', vmin=0.0, vmax=1.0)
+    plt.xlabel('Measure')
+    plt.savefig(Path(TEST_RESULTS_FOLDER, 'heatmap_{}_{}.png'.format(col_name, regressor_name)),
                 bbox_inches='tight', format='png')
     plt.clf()
 
 
-def remove_prefix(df_single_category: pd.DataFrame, prefix: str, col_name: str,
-                  top_k_cat_vals: List[str]):
+def remove_prefix(s: str, prefix: str):
+    if s.startswith(prefix):
+        return s[len(prefix):]
+    return s
+
+
+def remove_prefixes(df_single_category: pd.DataFrame, prefix: str, col_name: str,
+                    top_k_cat_vals: List[str]):
     return df_single_category[col_name].replace(dict(zip(top_k_cat_vals,
-                                                         [col[len(prefix):] for col in
+                                                         [remove_prefix(col, prefix) for col in
                                                           top_k_cat_vals])))
 
 
-def squared_error(true: pd.Series, pred: pd.Series) -> pd.Series:
-    return (true - pred) ** 2
+def rescale_series(series: pd.Series, min_v: float, max_v: float) -> pd.Series:
+    return (series - min_v) / (max_v - min_v)
 
 
-def plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name: str, n_std=2.0, facecolor='none') -> None:
+def rescale_all(to_plots: Dict[str, pd.DataFrame]):
+    measures = [value for value in TEST_COL_RENAMES.values() if not value == 'Regressor']
+    mins = {value: float("inf") for value in measures}
+    maxs = {value: float("-inf") for value in measures}
+    for regressor_name, to_plot in to_plots.items():
+        to_plot['R^2'] = to_plot['R^2'] * -1
+        curr_mins = to_plot.min()
+        curr_maxs = to_plot.max()
+        for measure in measures:
+            if curr_mins[measure] < mins[measure]:
+                mins[measure] = curr_mins[measure]
+            if curr_maxs[measure] > maxs[measure]:
+                maxs[measure] = curr_maxs[measure]
+    for regressor_name, to_plot in to_plots.items():
+        for measure in measures:
+            to_plot[measure] = rescale_series(to_plot[measure], mins[measure], maxs[measure])
+        to_plot.rename(columns={'R^2': '-R^2'}, inplace=True)
+    return to_plots
+
+
+def plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name: str, n_std=2.0,
+                 facecolor='none') -> None:
     # Taken from https://matplotlib.org/devdocs/gallery/statistics/confidence_ellipse.html
     x = predicted
     y = actual
     cov = np.cov(x, y)
-    pearson = cov[0, 1]/np.sqrt(cov[0, 0] * cov[1, 1])
+    pearson = cov[0, 1] / np.sqrt(cov[0, 0] * cov[1, 1])
     # Using a special case to obtain the eigenvalues of this
     # two-dimensionl dataset.
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
     ellipse = Ellipse((0, 0), width=ell_radius_x * 2, height=ell_radius_y * 2, alpha=0.2)
 
-    print("for model_name {}, radius x is {}, radius y is {}".format(model_name, ell_radius_x, ell_radius_y))
+    print("for model_name {}, radius x is {}, radius y is {}".format(model_name, ell_radius_x,
+                                                                     ell_radius_y))
     print(" and the sklearn r2_score is ", r2_score(y, x))
     # Calculating the stdandard deviation of x from
     # the squareroot of the variance and multiplying
@@ -142,6 +179,7 @@ def plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name: str, n_std
                 bbox_inches='tight', format='png')
     plt.clf()
 
+
 def plot_residuals(predicted: pd.Series, actual: pd.Series, model_name: str) -> None:
     # Taken from https://matplotlib.org/devdocs/gallery/statistics/confidence_ellipse.html
     x = predicted
@@ -165,10 +203,10 @@ def plot_residuals(predicted: pd.Series, actual: pd.Series, model_name: str) -> 
     plt.xlabel('sites sorted by error')
     plt.ylabel('Absolute error')
     plt.tick_params(
-        axis='x',          # changes apply to the x-axis
-        which='both',      # both major and minor ticks are affected
-        bottom=False,      # ticks along the bottom edge are off
-        top=False,         # ticks along the top edge are off
+        axis='x',  # changes apply to the x-axis
+        which='both',  # both major and minor ticks are affected
+        bottom=False,  # ticks along the bottom edge are off
+        top=False,  # ticks along the top edge are off
         labelbottom=False)
     # plt.xlim((-1.0, 6.0))
     plt.ylim((0.0, 13.0))
@@ -177,11 +215,13 @@ def plot_residuals(predicted: pd.Series, actual: pd.Series, model_name: str) -> 
                 bbox_inches='tight', format='png')
     plt.clf()
 
+
 def main():
     TEST_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
     plt.rcParams["figure.autolayout"] = True
     df = load_test_results()
-    df = df.rename(columns=REGRESSOR_RENAMES)
+    renames = {**REGRESSOR_RENAMES, **DUMMY_REGRESSOR_RENAMES}
+    df = df.rename(columns=renames)
 
     for prefix, k, col_name in PREFIXS_TO_VISUALIZE:
         cols = get_columns_that_start_with(df, prefix)
@@ -190,13 +230,24 @@ def main():
                                                                                    df_prefix_cols_only)
         df_single_category = get_top_k_cat_col_from_one_hot(df_single_category, df_prefix_cols_only,
                                                             prefix, col_name, k)
-        to_plot = mean_error_by_cat_val(df_single_category, col_name, REGRESSOR_RENAMES.values())
-        plot_heatmap(to_plot, col_name)
+        to_plots = mean_error_by_cat_val(df_single_category,
+                                         col_name,
+                                         renames.values(),
+                                         SCORING)
+        to_plots = rescale_all(to_plots)
+        for regressor_name, to_plot in to_plots.items():
+            if to_plot.index.name == 'Condition':
+                to_plot.index.name = 'Intervention'
+                col_name = 'Intervention'
+            elif to_plot.index.name == 'Intervention':
+                to_plot.index.name = 'Condition'
+                col_name = 'Condition'
+            plot_heatmap(to_plot, col_name, regressor_name)
 
-    for model_name in ['XGB', 'dummyregressor_mean', 'OLS', 'dummyregressor_median', 'SVM', 'KNN']:
-        # plot_ellipse(predicted: pd.Series, actual: pd.Series, model_name
+    for model_name in ['XGB', 'Mean', 'OLS', 'Median', 'SVM', 'KNN']:
         plot_ellipse(df[model_name], df.number_of_sae_subjects, model_name)
         plot_residuals(df[model_name], df.number_of_sae_subjects, model_name)
-        
+
+
 if __name__ == '__main__':
     main()
