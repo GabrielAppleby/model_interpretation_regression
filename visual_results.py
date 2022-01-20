@@ -194,7 +194,8 @@ def plot_residuals(predicted: pd.Series, actual: pd.Series, model_name: str) -> 
     ax = plt.gca()
     ax.add_patch(rectangle)
     ax.bar(range(len(sorted_errors)), sorted_errors)
-    ax.annotate("Mean Absolute Error: {:0.3f}".format(mean_error), (600.0, 1.5))
+    ax.annotate("Mean Absolute Error: {:0.3f}".format(mean_error), (460.0, 1.5))
+    # ax.annotate("Mean Absolute Error: {:0.3f}".format(mean_error), (600.0, 1.5))
     # ellipse.set_transform(transf + ax.transData)
     # ax.add_patch(ellipse)
     # ax.scatter(x, y, c='red', s=3)
@@ -209,7 +210,8 @@ def plot_residuals(predicted: pd.Series, actual: pd.Series, model_name: str) -> 
         top=False,  # ticks along the top edge are off
         labelbottom=False)
     # plt.xlim((-1.0, 6.0))
-    plt.ylim((0.0, 13.0))
+    plt.ylim((0.0, 12.0))
+    # plt.ylim((0.0, 13.0))
 
     plt.savefig(Path(TEST_RESULTS_FOLDER, 'residuals_{}.png'.format(model_name)),
                 bbox_inches='tight', format='png')
@@ -222,6 +224,7 @@ def main():
     df = load_test_results()
     renames = {**REGRESSOR_RENAMES, **DUMMY_REGRESSOR_RENAMES}
     df = df.rename(columns=renames)
+    sns.set(font_scale=1)
 
     for prefix, k, col_name in PREFIXS_TO_VISUALIZE:
         cols = get_columns_that_start_with(df, prefix)
@@ -244,6 +247,8 @@ def main():
                 col_name = 'Condition'
             plot_heatmap(to_plot, col_name, regressor_name)
 
+    sns.reset_orig()
+    plt.rcParams.update({'font.size': 12})
     for model_name in ['XGB', 'Mean', 'OLS', 'Median', 'SVM', 'KNN']:
         plot_ellipse(df[model_name], df.number_of_sae_subjects, model_name)
         plot_residuals(df[model_name], df.number_of_sae_subjects, model_name)
