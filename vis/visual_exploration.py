@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 
-from config import RESULTS_FOLDER
-from vis.data_loader import load_cali_housing, load_mpg, DataSplit
+from config import RESULTS_FOLDER, DATASETS
+from vis.data_loader import DataSplit
 
 EXPLORATION_RESULTS_FOLDER: Path = Path(RESULTS_FOLDER, 'exploration')
 
@@ -34,7 +34,7 @@ def create_corr_matrix(df: pd.DataFrame, data_name: str) -> None:
 def main():
     EXPLORATION_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
     plt.rcParams["figure.autolayout"] = True
-    for dataset_fnc, data_name in [(load_mpg, 'mpg'), (load_cali_housing, 'cali')]:
+    for dataset_fnc, data_name in DATASETS.values():
         train: DataSplit = dataset_fnc(42).train
         full_df = pd.concat([train.features.reset_index(drop=True),
                              train.targets.reset_index(drop=True)], axis=1)

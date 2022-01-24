@@ -2,6 +2,7 @@ import random
 from pathlib import Path
 from typing import Dict, Tuple
 
+import click
 import numpy as np
 import pandas as pd
 from joblib import dump
@@ -31,23 +32,24 @@ def search(pipeline: Pipeline, params: Dict, x_train: np.ndarray, y_train: np.nd
     return gs_clf.cv_results_, best_estimator
 
 
-def main() -> None:
+@click.command()
+@click.argument('regressor', type=click.Choice(list(REGRESSORS.keys())))
+@click.argument('dataset', type=click.Choice(list(DATASETS.keys())))
+def main(regressor: str, dataset: str) -> None:
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
     TUNING_RESULTS_FOLDER.mkdir(parents=True, exist_ok=True)
     SAVED_MODEL_FOLDER.mkdir(parents=True, exist_ok=True)
-
-    for dataset_fnc, data_name in DATASETS:
-        for regressor, params, reg_name in REGRESSORS:
-            name = NAME_TEMPLATE.format(model=reg_name, data=data_name)
-            dataset = dataset_fnc(RANDOM_SEED)
-            pipeline: Pipeline = make_pipeline(MinMaxScaler(), regressor)
-            results, best_estimator = search(pipeline, params, dataset.train.features,
-                                             dataset.train.targets)
-            dump(best_estimator, Path(SAVED_MODEL_FOLDER, name + '.joblib'))
-            results['name'] = name
-            df = pd.DataFrame(results)
-            df.to_csv(Path(TUNING_RESULTS_FOLDER, name + '.csv'), index=False)
+    name = NAME_TEMPLATE.format(model=regressor, data=dataset)
+    dataset = DATASETS[dataset][0](RANDOM_SEED)
+    model, params, _ = REGRESSORS[regressor]
+    pipeline: Pipeline = make_pipeline(MinMaxScaler(), model)
+    results, best_estimator = search(pipeline, params, dataset.train.features,
+                                     dataset.train.targets)
+    dump(best_estimator, Path(SAVED_MODEL_FOLDER, name + '.joblib'))
+    results['name'] = name
+    df = pd.DataFrame(results)
+    df.to_csv(Path(TUNING_RESULTS_FOLDER, name + '.csv'), index=False)
 
 
 if __name__ == '__main__':

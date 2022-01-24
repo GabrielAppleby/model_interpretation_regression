@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Tuple, List, Callable
+from typing import Dict, Tuple, Callable
 
 from sklearn.base import RegressorMixin
 from sklearn.neighbors import KNeighborsRegressor
@@ -23,6 +23,9 @@ SCORING = ['neg_mean_absolute_error', 'neg_mean_squared_error', 'r2']
 KNN_NAME = "KNN"
 XGB_NAME = "XGB"
 
+CALI_NAME = "CALI"
+MPG_NAME = "MPG"
+
 KNN_PARAMS: Dict = {"kneighborsregressor__n_neighbors": [1] + list(range(2, 42, 4))}
 XGB_PARAMS: Dict = {
     "xgbregressor__alpha": [.01, .1, .3, .75, 1.25],
@@ -33,9 +36,12 @@ XGB_PARAMS: Dict = {
     "xgbregressor__max_depth": [4, 8, 10, 12]
 }
 
-REGRESSORS: List[Tuple[RegressorMixin, Dict, str]] = [(KNeighborsRegressor(), KNN_PARAMS, KNN_NAME),
-                                                      (XGBRegressor(), XGB_PARAMS, XGB_NAME)]
+REGRESSORS: Dict[str, Tuple[RegressorMixin, Dict, str]] = {
+    KNN_NAME: (KNeighborsRegressor(), KNN_PARAMS, KNN_NAME),
+    XGB_NAME: (XGBRegressor(), XGB_PARAMS, XGB_NAME)
+}
 
-DATASETS: List[Tuple[Callable, str]] = [(load_cali_housing, 'cali'), (load_mpg, 'mpg')]
+DATASETS: Dict[str, Tuple[Callable, str]] = {CALI_NAME: (load_cali_housing, CALI_NAME),
+                                             MPG_NAME: (load_mpg, MPG_NAME)}
 
 RANDOM_SEED = 42
