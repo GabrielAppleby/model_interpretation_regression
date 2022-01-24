@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from data.data_config import HAS_EXP_ACCESS, NUM_SAE, DATA_FOLDER, SAE_BY_ENROLL
+from vahc.data.data_config import HAS_EXP_ACCESS, NUM_SAE, DATA_FOLDER, SAE_BY_ENROLL
 
 SHORTENED_COLUMNS = {'number_of_arms': 'num_arms',
                      'enrollment': 'enrollment',
