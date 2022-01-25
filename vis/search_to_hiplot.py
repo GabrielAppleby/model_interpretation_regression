@@ -2,12 +2,12 @@ from pathlib import Path
 
 import pandas as pd
 
-from vis.config import DATASETS, REGRESSORS, TUNING_RESULTS_FOLDER, NAME_TEMPLATE
+from config import DATASETS, REGRESSORS, TUNING_RESULTS_FOLDER, NAME_TEMPLATE
 
 
 def main():
-    for _, data_name in DATASETS:
-        for _, _, reg_name in REGRESSORS:
+    for _, data_name in DATASETS.values():
+        for _, _, reg_name in REGRESSORS.values():
             name = NAME_TEMPLATE.format(model=reg_name, data=data_name)
             result_file_name = Path(TUNING_RESULTS_FOLDER, name + '.csv')
             df = pd.read_csv(result_file_name)

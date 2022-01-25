@@ -2,7 +2,6 @@ import random
 from pathlib import Path
 from typing import Dict, Tuple
 
-import click
 import numpy as np
 import pandas as pd
 from joblib import dump
@@ -32,9 +31,6 @@ def search(pipeline: Pipeline, params: Dict, x_train: np.ndarray, y_train: np.nd
     return gs_clf.cv_results_, best_estimator
 
 
-@click.command()
-@click.argument('regressor', type=click.Choice(list(REGRESSORS.keys())))
-@click.argument('dataset', type=click.Choice(list(DATASETS.keys())))
 def main(regressor: str, dataset: str) -> None:
     random.seed(RANDOM_SEED)
     np.random.seed(RANDOM_SEED)
@@ -53,4 +49,6 @@ def main(regressor: str, dataset: str) -> None:
 
 
 if __name__ == '__main__':
-    main()
+    for reg in REGRESSORS.keys():
+        for data in DATASETS.keys():
+            main(reg, data)

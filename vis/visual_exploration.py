@@ -6,7 +6,7 @@ import pandas as pd
 import seaborn as sns
 
 from config import RESULTS_FOLDER, DATASETS
-from vis.data_loader import DataSplit
+from data_loader import DataSplit
 
 EXPLORATION_RESULTS_FOLDER: Path = Path(RESULTS_FOLDER, 'exploration')
 

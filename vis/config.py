@@ -5,7 +5,7 @@ from sklearn.base import RegressorMixin
 from sklearn.neighbors import KNeighborsRegressor
 from xgboost import XGBRegressor
 
-from vis.data_loader import load_cali_housing, load_mpg
+from data_loader import load_cali_housing, load_mpg
 
 TOP_LEVEL_FOLDER: Path = Path(__file__).parent
 RESULTS_FOLDER: Path = Path(TOP_LEVEL_FOLDER, 'results')
@@ -33,7 +33,8 @@ XGB_PARAMS: Dict = {
     "xgbregressor__gamma": [.01, .1, .3, .75, 1.25],
     "xgbregressor__min_child_weight": [1, 2, 4],
     "xgbregressor__subsample": [.9, .95, 1],
-    "xgbregressor__max_depth": [4, 8, 10, 12]
+    "xgbregressor__max_depth": [4, 8, 10, 12],
+    "xgbregressor__tree_method": ["gpu_hist"]
 }
 
 REGRESSORS: Dict[str, Tuple[RegressorMixin, Dict, str]] = {
