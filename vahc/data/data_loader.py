@@ -4,7 +4,7 @@ from typing import Tuple
 import numpy as np
 import pandas as pd
 
-from vahc.data.data_config import HAS_EXP_ACCESS, NUM_SAE, DATA_FOLDER, SAE_BY_ENROLL
+from data.data_config import HAS_EXP_ACCESS, NUM_SAE, DATA_FOLDER, SAE_BY_ENROLL
 
 SHORTENED_COLUMNS = {'number_of_arms': 'num_arms',
                      'enrollment': 'enrollment',
@@ -27,13 +27,12 @@ def get_shortened_dataframe(split: str) -> pd.DataFrame:
     return df
 
 
-def get_arrays(split: str) -> Tuple[np.ndarray, np.ndarray]:
-    x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split))).values
-    y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split))).values.ravel()
-    return x, y
-
-
 def get_dataframes(split: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
     x = pd.read_csv(Path(DATA_FOLDER, 'x_{}.csv'.format(split)))
     y = pd.read_csv(Path(DATA_FOLDER, 'y_{}.csv'.format(split)))
     return x, y
+
+
+def get_arrays(split: str) -> Tuple[np.ndarray, np.ndarray]:
+    x, y = get_dataframes(split)
+    return x.values, y.values.ravel()

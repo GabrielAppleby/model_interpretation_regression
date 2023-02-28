@@ -6,7 +6,7 @@ import psycopg2
 from dotenv import load_dotenv
 from psycopg2._psycopg import connection, cursor
 
-from vahc.data.data_config import DATA_FOLDER, FULL_CSV_FILE_NAME, NCT_ID, NUM_SAE
+from data_config import DATA_FOLDER, FULL_CSV_FILE_NAME, NCT_ID, NUM_SAE
 
 load_dotenv()
 

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from vahc.data.data_config import FULL_CSV_FILE_NAME, MIN_AGE_UNIT, HAS_EXP_ACCESS, \
+from data_config import FULL_CSV_FILE_NAME, MIN_AGE_UNIT, HAS_EXP_ACCESS, \
     NUM_SAE, NCT_ID, DATA_FOLDER
 
 RANDOM_SEED = 42

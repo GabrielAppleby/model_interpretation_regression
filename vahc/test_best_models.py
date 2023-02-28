@@ -33,7 +33,7 @@ def main():
             strategy = model.named_steps[model_name].strategy
             model_name = '{}_{}'.format(model_name, strategy)
         current_scores = {}
-        preds = model.predict(x_test)
+        preds = model.predict(x_test.values)
         all_preds.append(preds.reshape(-1, 1))
         names.append(model_name)
         current_scores['name'] = model_name

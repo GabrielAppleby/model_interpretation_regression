@@ -2,7 +2,7 @@ from typing import Tuple, Dict
 
 from sklearn.preprocessing import StandardScaler, KBinsDiscretizer
 
-from vahc.modeling.none_transform import NoneTransformer
+from modeling.none_transform import NoneTransformer
 
 STANDARD_SCALER_NAME = "SSCALE"
 KBINS_NAME = "KBINS"
